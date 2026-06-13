@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رّحال | Rahhal - Autonomous Travel Agent</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Cairo for Arabic (Default), Inter for English -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0f172a',
+                        cardBg: '#1e293b',
+                        cardBorder: '#334155',
+                        primaryBlue: '#2563eb',
+                        accentCyan: '#06b6d4',
+                        textMain: '#f8fafc',
+                        textMuted: '#94a3b8'
+                    },
+                    fontFamily: {
+                        sans: ['Cairo', 'sans-serif'], // Default to Cairo
+                        english: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            scroll-behavior: smooth;
+        }
+        
+        /* Language handling based on html lang attribute */
+        html[lang="en"] body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Visibility rules */
+        .lang-en { display: none; }
+        .lang-ar { display: block; }
+        span.lang-ar, inline.lang-ar { display: inline; }
+        .flex.lang-ar { display: flex; }
+        
+        html[lang="en"] .lang-ar { display: none !important; }
+        html[lang="en"] div.lang-en, html[lang="en"] p.lang-en, html[lang="en"] h1.lang-en, html[lang="en"] h2.lang-en, html[lang="en"] h3.lang-en, html[lang="en"] h4.lang-en, html[lang="en"] h5.lang-en, html[lang="en"] ul.lang-en, html[lang="en"] li.lang-en { display: block; }
+        html[lang="en"] span.lang-en { display: inline; }
+        html[lang="en"] .flex.lang-en { display: flex; }
+
+        /* Scrollbar customization */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid #334155;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Chat Bubbles directional logic */
+        .chat-bubble-ai {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            color: #f8fafc;
+            border-bottom-right-radius: 0; /* Default RTL */
+        }
+        html[lang="en"] .chat-bubble-ai { 
+            border-bottom-right-radius: 1rem;
+            border-bottom-left-radius: 0; 
+        }
+
+        .chat-bubble-user {
+            background-color: #2563eb;
+            color: #ffffff;
+            border-bottom-left-radius: 0; /* Default RTL */
+        }
+        html[lang="en"] .chat-bubble-user { 
+            border-bottom-left-radius: 1rem;
+            border-bottom-right-radius: 0; 
+        }
+
+        .text-gradient {
+            background: linear-gradient(to right, #60a5fa, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        html[lang="ar"] .text-gradient {
+            background: linear-gradient(to left, #60a5fa, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Loading Dots Animation */
+        .dot-typing {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 5px;
+            background-color: #06b6d4;
+            animation: typing 1.5s infinite linear;
+            position: relative;
+        }
+        .dot-typing::before, .dot-typing::after {
+            content: '';
+            display: inline-block;
+            position: absolute;
+            top: 0;
+            width: 6px;
+            height: 6px;
+            border-radius: 5px;
+            background-color: #06b6d4;
+        }
+        .dot-typing::before { left: -12px; animation: typing-before 1.5s infinite linear; }
+        .dot-typing::after { left: 12px; animation: typing-after 1.5s infinite linear; }
+
+        @keyframes typing { 0%, 50%, 100% { transform: translateY(0); } 25% { transform: translateY(-5px); } }
+        @keyframes typing-before { 0%, 25%, 100% { transform: translateY(0); } 12.5% { transform: translateY(-5px); } }
+        @keyframes typing-after { 0%, 75%, 100% { transform: translateY(0); } 37.5% { transform: translateY(-5px); } }
+    </style>
+</head>
+<body class="font-sans antialiased min-h-screen selection:bg-accentCyan selection:text-darkBg pb-20">
+
+    <!-- Navigation / Header -->
+    <nav class="fixed w-full z-50 glass-card border-b border-cardBorder">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primaryBlue to-accentCyan flex items-center justify-center text-white shadow-lg shadow-primaryBlue/20">
+                    <!-- Corporate 3D Aero Logo -->
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L22 20L12 16.5V2Z" fill="currentColor" fill-opacity="1"/>
+                        <path d="M12 2L2 20L12 16.5V2Z" fill="currentColor" fill-opacity="0.6"/>
+                    </svg>
+                </div>
+                <span class="font-bold text-xl tracking-wide text-white"><span class="lang-ar">رّحال | Rahhal</span><span class="lang-en">Rahhal | رّحال</span></span>
+            </div>
+
+            <div class="hidden md:flex gap-6 text-sm font-medium text-textMuted">
+                <a href="#abstract" class="hover:text-accentCyan transition-colors"><span class="lang-ar">الملخص</span><span class="lang-en">Abstract</span></a>
+                <a href="#framework" class="hover:text-accentCyan transition-colors"><span class="lang-ar">الإطار البحثي</span><span class="lang-en">Framework</span></a>
+                <a href="#architecture" class="hover:text-accentCyan transition-colors"><span class="lang-ar">المعمارية</span><span class="lang-en">Architecture</span></a>
+                <a href="#case-studies" class="hover:text-accentCyan transition-colors"><span class="lang-ar">دراسات الحالة</span><span class="lang-en">Cases</span></a>
+                <a href="#demo" class="hover:text-accentCyan transition-colors"><span class="lang-ar">التجربة الحية</span><span class="lang-en">Live Demo</span></a>
+                <a href="#references" class="hover:text-accentCyan transition-colors text-white"><span class="lang-ar">المراجع</span><span class="lang-en">References</span></a>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- Language Switcher -->
+                <button onclick="toggleLanguage()" class="flex items-center gap-2 bg-cardBg border border-cardBorder px-3 py-1.5 rounded-full hover:bg-cardBorder transition-colors" dir="ltr">
+                    <svg class="w-4 h-4 text-accentCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
+                    <span class="text-xs font-bold text-white uppercase">EN / ع</span>
+                </button>
+                <div class="hidden sm:block text-sm font-semibold px-4 py-1.5 bg-primaryBlue/10 border border-primaryBlue/30 rounded-full text-textMain">
+                    <span class="lang-ar">الباحث: ريان العوفي</span>
+                    <span class="lang-en">Researcher: Rayan Aloufi</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="pt-32 pb-20 px-6">
+        <div class="max-w-4xl mx-auto text-center space-y-6">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primaryBlue/10 border border-primaryBlue/30 text-primaryBlue text-xs font-semibold uppercase tracking-widest mb-4">
+                <span class="w-2 h-2 rounded-full bg-primaryBlue animate-pulse"></span>
+                <span class="lang-ar">مشروع بحثي متقدم في التعلم العميق</span>
+                <span class="lang-en">Advanced Deep Learning Research</span>
+            </div>
+            
+            <h1 class="text-4xl md:text-6xl font-extrabold leading-tight text-textMain lang-ar">
+                وكلاء السفر الرقميين المستقلين: <br>
+                <span class="text-gradient">تسخير (LLMs) وتقنيات (RAG) لإلغاء الوسطاء في قطاع السفر</span>
+            </h1>
+            <h1 class="text-4xl md:text-6xl font-extrabold leading-tight text-textMain lang-en">
+                Autonomous Digital Travel Agents: <br>
+                <span class="text-gradient">Leveraging LLMs and RAG Architectures for Industry Disintermediation</span>
+            </h1>
+            
+            <p class="text-lg md:text-xl text-textMuted max-w-3xl mx-auto leading-relaxed mt-6 lang-ar">
+                مشروع بحثي شامل يستكشف كيف يقضي الذكاء الاصطناعي التوليدي على وسطاء السفر التقليديين، ليوفر للمسافرين أسعاراً مباشرة، بدون عمولات مخفية، مع خطط سير رحلات مخصصة بالكامل.
+            </p>
+            <p class="text-lg md:text-xl text-textMuted max-w-3xl mx-auto leading-relaxed mt-6 lang-en">
+                A comprehensive research project exploring how Generative AI eliminates traditional travel middlemen, providing travelers with raw API pricing, zero hidden commissions, and highly personalized itineraries.
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-6 space-y-24">
+
+        <!-- 1. Executive Summary & Problem Statement -->
+        <section id="abstract" class="grid md:grid-cols-2 gap-12 items-center">
+            <div class="space-y-6">
+                <h2 class="text-3xl font-bold text-white border-r-4 rtl:border-r-4 ltr:border-l-4 ltr:border-r-0 rtl:pr-4 ltr:pl-4 border-accentCyan lang-ar">مشكلة وكالات السفر التقليدية</h2>
+                <h2 class="text-3xl font-bold text-white border-l-4 rtl:border-r-4 ltr:border-l-4 ltr:border-r-0 rtl:pr-4 ltr:pl-4 border-accentCyan lang-en">The Problem with Traditional Agencies</h2>
+                
+                <div class="lang-ar text-textMuted leading-relaxed text-lg space-y-4">
+                    <p>أصبحت وكالات السفر التقليدية نموذج عمل "رجعي". فهي تفرض رسوماً باهظة وغير مبررة على المسافرين لترتيبات يمكن أتمتتها بالكامل الآن.</p>
+                    <p>السؤال البحثي الأساسي هو: <strong>كيف يمكن للذكاء الاصطناعي التوليدي إحداث ثورة في قطاع السفر وإلغاء الحاجة للوسطاء التقليديين؟</strong> من خلال دمج واجهات برمجة التطبيقات (APIs) في منصة مستقلة، يمكننا تشغيل وكالة سفر ذكية تعمل على مدار الساعة بجزء بسيط جداً من التكلفة.</p>
+                </div>
+                <div class="lang-en text-textMuted leading-relaxed text-lg space-y-4">
+                    <p>Traditional travel agencies have become a "retrograde" business model. They impose exorbitant and unjustified fees on travelers for arrangements that can now be entirely automated.</p>
+                    <p>The core research question is: <strong>How can generative AI disrupt the travel industry and eliminate the need for traditional middlemen?</strong> By integrating multiple travel APIs into a single autonomous platform, we can operate a smart, 24/7 travel agency at a fraction of the cost.</p>
+                </div>
+            </div>
+            
+            <div class="glass-card p-8 rounded-2xl">
+                <h3 class="text-xl font-bold text-white mb-6"><span class="lang-ar">الأثر المالي (الوكالات التقليدية ضد الذكاء الاصطناعي)</span><span class="lang-en">Financial Impact (Traditional vs. AI)</span></h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center p-4 bg-cardBg rounded-xl border border-cardBorder">
+                        <span class="text-textMuted"><span class="lang-ar">متوسط هامش ربح الوكالات</span><span class="lang-en">Avg. Agency Markup</span></span>
+                        <span class="text-red-400 font-bold">15% - 25%</span>
+                    </div>
+                    <div class="flex justify-between items-center p-4 bg-cardBg rounded-xl border border-cardBorder">
+                        <span class="text-textMuted"><span class="lang-ar">هامش ربح الوكيل الذكي</span><span class="lang-en">Autonomous AI Markup</span></span>
+                        <span class="text-accentCyan font-bold"><span class="lang-ar">0% (سعر مباشر)</span><span class="lang-en">0% (Direct API)</span></span>
+                    </div>
+                    <div class="flex justify-between items-center p-4 bg-cardBg rounded-xl border border-cardBorder">
+                        <span class="text-textMuted"><span class="lang-ar">زمن معالجة الخطة</span><span class="lang-en">Processing Time</span></span>
+                        <span class="text-white font-bold"><span class="lang-ar">أقل من ٥ ثوانٍ</span><span class="lang-en">< 5 Seconds</span></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 1.5 Research Framework Section -->
+        <section id="framework" class="pt-10">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-white"><span class="lang-ar">الإطار البحثي</span><span class="lang-en">Research Framework</span></h2>
+                <p class="text-textMuted mt-4 max-w-2xl mx-auto">
+                    <span class="lang-ar">نهج منظم ومدروس لإعادة تعريف تجربة حجز رحلات السفر.</span>
+                    <span class="lang-en">A structured approach to redefining the travel booking experience.</span>
+                </p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Objectives -->
+                <div class="glass-card p-6 rounded-2xl border-t-4 border-t-accentCyan hover:-translate-y-2 transition-transform duration-300">
+                    <h3 class="text-xl font-bold text-white mb-3"><span class="lang-ar">الأهداف</span><span class="lang-en">Objectives</span></h3>
+                    <p class="text-textMuted text-sm leading-relaxed">
+                        <span class="lang-ar">الأتمتة الكاملة لتوليد خطط السفر، القضاء على هوامش الربح المخفية للوكالات، وتوفير أسعار حية ومباشرة للمسافرين دون وسطاء.</span>
+                        <span class="lang-en">To fully automate itinerary generation, eliminate hidden agency markups, and provide real-time API-driven pricing directly to travelers.</span>
+                    </p>
+                </div>
+                <!-- Methodology -->
+                <div class="glass-card p-6 rounded-2xl border-t-4 border-t-primaryBlue hover:-translate-y-2 transition-transform duration-300">
+                    <h3 class="text-xl font-bold text-white mb-3"><span class="lang-ar">المنهجية</span><span class="lang-en">Methodology</span></h3>
+                    <p class="text-textMuted text-sm leading-relaxed">
+                        <span class="lang-ar">استخدام النماذج اللغوية (LLMs) لمعالجة اللغة، وتقنية (RAG) لاسترجاع البيانات الحية، و(CNN) للتحقق البصري، و(GAN) للتدريب الآمن.</span>
+                        <span class="lang-en">Utilizing LLMs for natural language processing, RAG for live data retrieval, CNNs for visual validation, and GANs for synthetic data training.</span>
+                    </p>
+                </div>
+                <!-- Expected Results -->
+                <div class="glass-card p-6 rounded-2xl border-t-4 border-t-emerald-500 hover:-translate-y-2 transition-transform duration-300">
+                    <h3 class="text-xl font-bold text-white mb-3"><span class="lang-ar">النتائج المتوقعة</span><span class="lang-en">Expected Results</span></h3>
+                    <p class="text-textMuted text-sm leading-relaxed">
+                        <span class="lang-ar">تقليل وقت الحجز من عدة ساعات إلى ثوانٍ معدودة، تحقيق 0% كعمولات للوسطاء، وإنتاج خطط سفر ديناميكية ومخصصة بدقة عالية.</span>
+                        <span class="lang-en">A reduction in booking time from hours to seconds, 0% middleman commission, and highly personalized, dynamic travel plans.</span>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. AI Architecture Section -->
+        <section id="architecture">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-white"><span class="lang-ar">نماذج التعلم العميق المطبقة</span><span class="lang-en">Applied Deep Learning Models</span></h2>
+                <p class="text-textMuted mt-4 max-w-2xl mx-auto">
+                    <span class="lang-ar">يدمج نظامنا المستقل أربع معماريات مختلفة للشبكات العصبية لضمان الدقة، التخصيص، والموثوقية في الوقت الفعلي.</span>
+                    <span class="lang-en">Our autonomous system integrates four distinct neural network architectures to ensure accuracy, personalization, and real-time reliability.</span>
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Transformers -->
+                <div class="glass-card p-6 rounded-2xl hover:-translate-y-2 transition-transform duration-300">
+                    <div class="w-12 h-12 bg-primaryBlue/20 rounded-xl flex items-center justify-center text-primaryBlue mb-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2">Transformers (LLMs)</h3>
+                    <p class="text-sm text-textMuted lang-ar">العقل المدبر للنظام. يفهم نية المستخدم المعقدة وسياق الكلام ويترجم اللغة الطبيعية إلى أوامر برمجية (APIs) دقيقة.</p>
+                    <p class="text-sm text-textMuted lang-en">Acts as the cognitive core. It understands complex user intents, contextual nuances, and translates natural language into structured API queries.</p>
+                </div>
+
+                <!-- RAG -->
+                <div class="glass-card p-6 rounded-2xl hover:-translate-y-2 transition-transform duration-300">
+                    <div class="w-12 h-12 bg-accentCyan/20 rounded-xl flex items-center justify-center text-accentCyan mb-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2">RAG Engine</h3>
+                    <p class="text-sm text-textMuted lang-ar">الاسترجاع المعزز بالتوليد. يمنع "هلوسة" الذكاء الاصطناعي عبر جلب بيانات وأسعار حقيقية ومباشرة من أنظمة التوزيع العالمية.</p>
+                    <p class="text-sm text-textMuted lang-en">Retrieval-Augmented Generation grounds the LLM. It fetches live prices from GDS (Global Distribution Systems) to prevent AI hallucination.</p>
+                </div>
+
+                <!-- CNN -->
+                <div class="glass-card p-6 rounded-2xl hover:-translate-y-2 transition-transform duration-300">
+                    <div class="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center text-purple-400 mb-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2">CNNs</h3>
+                    <p class="text-sm text-textMuted lang-ar">شبكات الطي العصبية للرؤية البصرية. تقوم بتحليل صور الفنادق تلقائياً للتأكد من أن الغرفة تتطابق فعلياً مع المواصفات (مثل إطلالة البحر).</p>
+                    <p class="text-sm text-textMuted lang-en">Convolutional Neural Networks visually verify hotel rooms. It analyzes API images to ensure a room genuinely matches the "sea view" label.</p>
+                </div>
+
+                <!-- GAN -->
+                <div class="glass-card p-6 rounded-2xl hover:-translate-y-2 transition-transform duration-300">
+                    <div class="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center text-emerald-400 mb-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"></path></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2">GANs</h3>
+                    <p class="text-sm text-textMuted lang-ar">شبكات التوليد التنافسية. تقوم بتوليد بيانات حجز اصطناعية لتدريب وتطوير خوارزمياتنا دون المساس بخصوصية بيانات العملاء الحقيقيين.</p>
+                    <p class="text-sm text-textMuted lang-en">Generative Adversarial Networks create synthetic booking datasets for safe model training, complying with strict data privacy laws.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2.5 Case Studies Section -->
+        <section id="case-studies" class="pt-10">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-white"><span class="lang-ar">دراسات الحالة التحليلية</span><span class="lang-en">Analytical Case Studies</span></h2>
+                <p class="text-textMuted mt-4 max-w-2xl mx-auto">
+                    <span class="lang-ar">مقارنة بحثية تطبيقية بين وكالات السفر عبر الإنترنت (OTAs) ونموذج وكيل السفر المستقل المعتمد على الذكاء الاصطناعي.</span>
+                    <span class="lang-en">An applied research comparison between traditional OTAs and the AI-driven Autonomous Travel Agent model.</span>
+                </p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8">
+                
+                <!-- Case Study 1: Traditional OTA -->
+                <div class="glass-card p-8 rounded-2xl border-r-4 rtl:border-r-4 ltr:border-l-4 ltr:border-r-0 border-red-500/50">
+                    <h3 class="text-xl font-bold text-white mb-4">
+                        <span class="lang-ar">الحالة الأولى: الوكالات التقليدية (مثل Expedia و Booking)</span>
+                        <span class="lang-en">Case 1: Traditional OTAs (e.g., Expedia, Booking)</span>
+                    </h3>
+                    <ul class="space-y-4 text-textMuted text-sm">
+                        <li class="flex gap-3">
+                            <span class="text-red-400">✗</span>
+                            <div>
+                                <strong class="text-white block"><span class="lang-ar">نموذج الإيرادات (العمولات)</span><span class="lang-en">Revenue Model (Commissions)</span></strong>
+                                <span class="lang-ar">تفرض رسوماً تتراوح بين 15% إلى 30% على الفنادق وشركات الطيران، مما يضطر مقدمي الخدمة لرفع الأسعار على المستهلك النهائي لتغطية هذه التكاليف.</span>
+                                <span class="lang-en">Imposes 15% to 30% commission rates on properties, forcing them to inflate prices for the end consumer to cover costs.</span>
+                            </div>
+                        </li>
+                        <li class="flex gap-3">
+                            <span class="text-red-400">✗</span>
+                            <div>
+                                <strong class="text-white block"><span class="lang-ar">المركزية وتأثير الوسيط</span><span class="lang-en">Centralization & Intermediary Effect</span></strong>
+                                <span class="lang-ar">تعمل هذه المنصات كطبقة عازلة تمنع الاتصال المباشر بين مزود الخدمة والمسافر، وتقدم باقات جامدة تفتقر للتخصيص العميق.</span>
+                                <span class="lang-en">Acts as a buffer preventing direct connection between providers and travelers, offering rigid packages lacking deep personalization.</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Case Study 2: Autonomous Agent -->
+                <div class="glass-card p-8 rounded-2xl border-r-4 rtl:border-r-4 ltr:border-l-4 ltr:border-r-0 border-emerald-500/50 bg-gradient-to-br from-emerald-900/10 to-transparent">
+                    <h3 class="text-xl font-bold text-white mb-4">
+                        <span class="lang-ar">الحالة الثانية: نموذج "رّحال" للذكاء الاصطناعي</span>
+                        <span class="lang-en">Case 2: The "Rahhal" AI Autonomous Model</span>
+                    </h3>
+                    <ul class="space-y-4 text-textMuted text-sm">
+                        <li class="flex gap-3">
+                            <span class="text-emerald-400">✓</span>
+                            <div>
+                                <strong class="text-white block"><span class="lang-ar">التسعير المباشر عبر الواجهات (API-Direct)</span><span class="lang-en">API-Direct Pricing</span></strong>
+                                <span class="lang-ar">يتصل محرك RAG مباشرة بواجهات أنظمة التوزيع العالمية (GDS) لاستخراج السعر الصافي وتوفير الحجز المباشر بهامش ربح (0% عمولة).</span>
+                                <span class="lang-en">The RAG engine connects directly to GDS APIs to extract net prices and facilitate direct bookings with zero intermediary markup (0% commission).</span>
+                            </div>
+                        </li>
+                        <li class="flex gap-3">
+                            <span class="text-emerald-400">✓</span>
+                            <div>
+                                <strong class="text-white block"><span class="lang-ar">التخصيص الفائق (Hyper-Personalization)</span><span class="lang-en">Hyper-Personalization</span></strong>
+                                <span class="lang-ar">تستطيع النماذج اللغوية (LLMs) الاستماع لتفضيلات المستخدم وتحليلها לבناء خطة سياحية دقيقة وشاملة غير متوفرة في النماذج الجاهزة.</span>
+                                <span class="lang-en">LLMs listen and analyze user preferences to build a precise, comprehensive itinerary unavailable in off-the-shelf packages.</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. The Interactive Live Demo -->
+        <section id="demo" class="pt-10">
+            <div class="glass-card rounded-3xl p-1 md:p-8 border border-cardBorder shadow-2xl relative overflow-hidden">
+                <!-- Background Glow -->
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-primaryBlue/20 blur-[100px] pointer-events-none"></div>
+
+                <div class="text-center mb-8 relative z-10">
+                    <h2 class="text-3xl font-bold text-white"><span class="lang-ar">نموذج النظام الحي</span><span class="lang-en">Live System Prototype</span></h2>
+                    <p class="text-textMuted mt-2">
+                        <span class="lang-ar">تفاعل مع وكيل "رّحال" الذكي لبناء خطة سفر متكاملة بأسعار مباشرة بالريال السعودي.</span>
+                        <span class="lang-en">Interact with Rahhal. Complete end-to-end itinerary generation with real SAR pricing.</span>
+                    </p>
+                </div>
+
+                <!-- The App Interface -->
+                <div class="max-w-4xl mx-auto bg-darkBg border border-cardBorder rounded-2xl overflow-hidden shadow-xl flex flex-col h-[850px] relative z-10">
+                    
+                    <!-- Chat Header -->
+                    <header class="bg-cardBg border-b border-cardBorder p-4 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primaryBlue to-accentCyan flex items-center justify-center shadow-lg">
+                                <!-- Corporate 3D Aero Logo -->
+                                <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2L22 20L12 16.5V2Z" fill="currentColor" fill-opacity="1"/>
+                                    <path d="M12 2L2 20L12 16.5V2Z" fill="currentColor" fill-opacity="0.6"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white"><span class="lang-ar">رّحال</span><span class="lang-en">Rahhal</span> <span class="text-xs font-normal text-textMuted bg-cardBorder px-2 py-0.5 rounded-full mx-1">v2.0 Beta</span></h3>
+                                <p class="text-xs text-accentCyan flex items-center gap-1">
+                                    <span class="w-2 h-2 rounded-full bg-accentCyan animate-pulse"></span> <span class="lang-ar">متصل (مزود بالـ RAG)</span><span class="lang-en">Online (RAG Enabled)</span>
+                                </p>
+                            </div>
+                        </div>
+                    </header>
+
+                    <!-- Chat Container -->
+                    <div class="flex-grow p-6 overflow-y-auto space-y-6" id="chat-container">
+                        
+                        <!-- AI Message -->
+                        <div class="flex gap-4 max-w-[85%]">
+                            <div class="w-8 h-8 rounded-full bg-cardBg border border-cardBorder flex items-center justify-center text-xs font-bold text-primaryBlue flex-shrink-0">AI</div>
+                            <div class="chat-bubble-ai p-4 rounded-2xl text-sm leading-relaxed shadow-sm">
+                                <span class="lang-ar">أهلاً بك يا ريان! أنا وكيل سفرك الذكي "رّحال". وظيفتي هي تخطي السماسرة وجلب الأسعار المباشرة لك من شركات الطيران والفنادق. <br><br> كيف يمكنني مساعدتك في التخطيط لرحلتك اليوم؟</span>
+                                <span class="lang-en">Welcome, Rayan! I am your autonomous travel agent. I bypass middlemen to fetch raw API prices directly from airlines and hotels. <br><br> How can I help you plan your trip today?</span>
+                            </div>
+                        </div>
+
+                        <!-- User Message -->
+                        <div class="flex gap-4 max-w-[85%] rtl:mr-auto ltr:ml-auto rtl:justify-start ltr:justify-end rtl:flex-row ltr:flex-row-reverse" dir="ltr">
+                            <div class="chat-bubble-user p-4 rounded-2xl text-sm leading-relaxed shadow-sm rtl:text-right ltr:text-left" dir="auto">
+                                <span class="lang-ar">أحتاج رحلة ٣ أيام إلى طرابزون، تركيا لعائلتي في شهر يوليو. أريد حجز طيران مباشر، شقة غرفتين، سيارة عائلية (SUV)، وخطة سياحية مفصلة جداً يوماً بيوم (من الصباح للمساء متضمنة أسماء مطاعم محلية محددة للفطور والغداء والعشاء). وبدون أي عمولات مخفية.</span>
+                                <span class="lang-en">I need a 3-day trip to Trabzon, Turkey for this July. Family trip. We need direct flights, a 2-bedroom apartment, an SUV rental, and a fully detailed day-by-day itinerary (morning to evening with specific local restaurants for breakfast, lunch, and dinner). Zero hidden commissions.</span>
+                            </div>
+                            <div class="w-8 h-8 rounded-full bg-primaryBlue border border-primaryBlue flex items-center justify-center text-xs font-bold text-white flex-shrink-0 rtl:ml-4 rtl:mr-0 ltr:ml-4 ltr:mr-0">RA</div>
+                        </div>
+
+                    </div>
+
+                    <!-- Action Bar -->
+                    <div class="p-4 bg-cardBg border-t border-cardBorder">
+                        <button id="generate-btn" onclick="startGeneration()" class="w-full bg-primaryBlue hover:bg-blue-500 transition-colors text-white font-bold py-4 rounded-xl shadow-lg flex justify-center items-center gap-2 group">
+                            <span class="lang-ar" id="btn-text-ar">تنفيذ البحث الذكي المستقل</span>
+                            <span class="lang-en" id="btn-text-en">Execute Autonomous Search</span>
+                            <svg class="w-5 h-5 rtl:hidden group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            <svg class="w-5 h-5 hidden rtl:block group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Challenges & Conclusion -->
+        <section class="grid md:grid-cols-2 gap-8 pt-10">
+            <div class="glass-card p-8 rounded-2xl">
+                <h3 class="text-xl font-bold text-white mb-4"><span class="lang-ar">التحديات الفنية والأخلاقية</span><span class="lang-en">Identified Challenges</span></h3>
+                <ul class="space-y-4 text-textMuted">
+                    <li class="flex gap-3">
+                        <span class="text-accentCyan">■</span>
+                        <span class="lang-ar"><strong>قيود الـ API:</strong> التجميع اللحظي للبيانات من مئات المزودين يتطلب أنظمة تخزين مؤقت (Caching) قوية لتجنب حظر الطلبات.</span>
+                        <span class="lang-en"><strong>API Rate Limits:</strong> Real-time aggregation across hundreds of providers requires robust caching to avoid rate-limit bans.</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="text-accentCyan">■</span>
+                        <span class="lang-ar"><strong>هلوسة الذكاء الاصطناعي:</strong> يجب فرض بروتوكولات RAG صارمة لضمان عدم اختلاق النظام لرحلات طيران أو فنادق وهمية.</span>
+                        <span class="lang-en"><strong>LLM Hallucinations:</strong> Strict RAG protocols must be enforced to ensure the AI does not invent non-existent flights or hotels.</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="text-accentCyan">■</span>
+                        <span class="lang-ar"><strong>التأثير الاقتصادي:</strong> الانتشار الواسع لهذا النظام سيؤدي إلى فقدان كبير للوظائف في قطاع وكالات السياحة التقليدية.</span>
+                        <span class="lang-en"><strong>Economic Disruption:</strong> Widespread adoption will lead to massive job displacement in the traditional travel agency sector.</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="glass-card p-8 rounded-2xl bg-gradient-to-br from-cardBg to-primaryBlue/10 border-primaryBlue/20">
+                <h3 class="text-xl font-bold text-white mb-4"><span class="lang-ar">الخاتمة والآفاق المستقبلية</span><span class="lang-en">Conclusion & Future Scope</span></h3>
+                <p class="text-textMuted leading-relaxed mb-4">
+                    <span class="lang-ar">يؤكد هذا البحث أن وكالات السفر التقليدية معرضة للإلغاء التام كوسطاء. الذكاء الاصطناعي التوليدي، عند اقترانه بشكل آمن بـ RAG، يحقق تخصيصاً فائقاً وشفافية مطلقة في الأسعار.</span>
+                    <span class="lang-en">The research confirms that traditional travel agencies are susceptible to complete disintermediation. Generative AI, when securely coupled with RAG architectures, achieves superior personalization and pricing transparency.</span>
+                </p>
+                <p class="text-textMuted leading-relaxed">
+                    <span class="lang-ar">خلال الـ ٥ سنوات القادمة، سيتحول القطاع من منصات البحث اليدوية إلى <strong>وكلاء صوتيين مستقلين</strong> يتولون عمليات الحجز من البداية للنهاية في الخلفية.</span>
+                    <span class="lang-en">Within the next 5 years, the industry will transition from search-based platforms to <strong>Autonomous Voice Agents</strong> handling end-to-end booking processes seamlessly in the background.</span>
+                </p>
+            </div>
+        </section>
+
+        <!-- 5. Academic References Section -->
+        <section id="references" class="pt-10 border-t border-cardBorder mt-10">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <svg class="w-6 h-6 text-accentCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    <span class="lang-ar">المراجع العلمية</span><span class="lang-en">Academic References</span>
+                </h2>
+            </div>
+            <div class="glass-card p-8 rounded-2xl">
+                <!-- Added dir="ltr" to maintain English references format regardless of page language -->
+                <ul class="space-y-5 text-sm text-textMuted list-none" dir="ltr">
+                    <li class="pl-5 relative before:content-[''] before:absolute before:w-2 before:h-2 before:bg-primaryBlue before:rounded-full before:left-0 before:top-1.5 text-left">
+                        <span class="text-white font-semibold">Lewis, P., et al. (2020).</span> Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <em>Advances in Neural Information Processing Systems (NeurIPS)</em>, 33, 9459-9474.
+                    </li>
+                    <li class="pl-5 relative before:content-[''] before:absolute before:w-2 before:h-2 before:bg-primaryBlue before:rounded-full before:left-0 before:top-1.5 text-left">
+                        <span class="text-white font-semibold">Buhalis, D., et al. (2019).</span> Technology in tourism-from information communication technologies to eTourism and smart tourism towards ambient intelligence tourism: a perspective article. <em>Tourism Review</em>, 74(2), 284-292.
+                    </li>
+                    <li class="pl-5 relative before:content-[''] before:absolute before:w-2 before:h-2 before:bg-primaryBlue before:rounded-full before:left-0 before:top-1.5 text-left">
+                        <span class="text-white font-semibold">Vaswani, A., et al. (2017).</span> Attention Is All You Need. <em>Advances in Neural Information Processing Systems (NeurIPS)</em>, 30.
+                    </li>
+                    <!-- New Reference 1 -->
+                    <li class="pl-5 relative before:content-[''] before:absolute before:w-2 before:h-2 before:bg-primaryBlue before:rounded-full before:left-0 before:top-1.5 text-left">
+                        <span class="text-white font-semibold">Dwivedi, Y. K., et al. (2023).</span> "So what if ChatGPT wrote it?" Multidisciplinary perspectives on opportunities, challenges and implications of generative conversational AI. <em>International Journal of Information Management</em>, 71, 102642.
+                    </li>
+                    <!-- New Reference 2 -->
+                    <li class="pl-5 relative before:content-[''] before:absolute before:w-2 before:h-2 before:bg-primaryBlue before:rounded-full before:left-0 before:top-1.5 text-left">
+                        <span class="text-white font-semibold">Xi, Z., et al. (2023).</span> The rise and potential of large language model based agents: A survey. <em>arXiv preprint arXiv:2309.07864</em>.
+                    </li>
+                    <!-- Personal Reference -->
+                    <li class="pl-5 relative before:content-[''] before:absolute before:w-2 before:h-2 before:bg-accentCyan before:rounded-full before:left-0 before:top-1.5 text-left">
+                        <span class="text-white font-semibold">Aloufi, R. (2026).</span> Autonomous Digital Travel Agents: Leveraging LLMs and RAG Architectures for Industry Disintermediation. <em>Advanced Deep Learning Research Project</em>.
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-24 border-t border-cardBorder bg-darkBg py-8 text-center">
+        <p class="text-textMuted text-sm font-medium">
+            <span class="lang-ar">تم إعداد البحث والنموذج بواسطة ريان العوفي © ٢٠٢٦</span>
+            <span class="lang-en">Research & Prototype by Rayan Aloufi © 2026</span>
+        </p>
+        <p class="text-cardBorder text-xs mt-2">
+            <span class="lang-ar">مشروع التعلم العميق المتقدم</span>
+            <span class="lang-en">Advanced Deep Learning Project</span>
+        </p>
+    </footer>
+
+    <!-- Interactive Script -->
+    <script>
+        let currentLang = 'ar'; // Default language logic
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'ar' ? 'en' : 'ar';
+            document.documentElement.lang = currentLang;
+            document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+            
+            // Scroll to bottom of chat if it's currently generated so timeline doesn't mess up
+            const chatContainer = document.getElementById('chat-container');
+            if(chatContainer) {
+                setTimeout(() => chatContainer.scrollTop = chatContainer.scrollHeight, 50);
+            }
+        }
+
+        function startGeneration() {
+            const btn = document.getElementById('generate-btn');
+            const chatContainer = document.getElementById('chat-container');
+            const btnAr = document.getElementById('btn-text-ar');
+            const btnEn = document.getElementById('btn-text-en');
+            
+            btn.disabled = true;
+            btnAr.innerHTML = 'جاري تأسيس اتصال آمن مع المزودين...';
+            btnEn.innerHTML = 'Establishing Secure API Connections...';
+            btn.classList.replace('bg-primaryBlue', 'bg-cardBorder');
+            btn.classList.replace('text-white', 'text-textMuted');
+            btn.classList.remove('hover:bg-blue-500');
+
+            const loadingHTML = `
+                <div id="loading-bubble" class="flex gap-4 max-w-[85%] mt-4">
+                    <div class="w-8 h-8 rounded-full bg-cardBg border border-cardBorder flex items-center justify-center text-xs font-bold text-primaryBlue flex-shrink-0">AI</div>
+                    <div class="chat-bubble-ai p-4 rounded-2xl text-sm flex items-center justify-center w-20 shadow-sm relative">
+                        <div class="dot-typing ml-3 mt-1"></div>
+                    </div>
+                </div>
+            `;
+            chatContainer.insertAdjacentHTML('beforeend', loadingHTML);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            setTimeout(() => {
+                document.getElementById('loading-bubble').remove();
+                
+                const resultHTML = `
+                    <div class="flex gap-4 max-w-[95%] mt-4">
+                        <div class="w-8 h-8 rounded-full bg-cardBg border border-cardBorder flex items-center justify-center text-xs font-bold text-primaryBlue flex-shrink-0">AI</div>
+                        <div class="bg-cardBg border border-accentCyan/40 p-5 rounded-2xl text-sm w-full shadow-lg shadow-accentCyan/5">
+                            
+                            <!-- Header -->
+                            <p class="font-bold text-white mb-4 text-base flex items-center gap-2">
+                                <svg class="w-5 h-5 text-accentCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                <span class="lang-ar">تم تجهيز الحجوزات وخطة السفر المتكاملة</span>
+                                <span class="lang-en">Master Itinerary & Bookings Ready</span>
+                            </p>
+                            
+                            <!-- Bookings Wrapper -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                <!-- Flight Data -->
+                                <div class="bg-darkBg p-4 rounded-xl border border-cardBorder group hover:border-primaryBlue/50 transition-colors">
+                                    <p class="text-xs text-accentCyan font-bold uppercase tracking-wider mb-1 flex justify-between">
+                                        <span class="lang-ar">الطيران</span><span class="lang-en">Flight</span>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </p>
+                                    <p class="font-bold text-white text-base">JED ✈ TZX</p>
+                                    <p class="text-xs text-textMuted mt-1"><span class="lang-ar">طيران ناس • رحلة مباشرة</span><span class="lang-en">Flynas • Non-stop</span></p>
+                                    <p class="text-lg font-bold text-white mt-2">SAR 1,575 <a href="https://www.skyscanner.net/transport/flights/jed/tzx" target="_blank" class="text-xs text-primaryBlue font-semibold mx-1 cursor-pointer hover:underline"><span class="lang-ar">رابط الحجز</span><span class="lang-en">Book Link</span></a></p>
+                                </div>
+
+                                <!-- Hotel Data -->
+                                <div class="bg-darkBg p-4 rounded-xl border border-cardBorder group hover:border-primaryBlue/50 transition-colors">
+                                    <p class="text-xs text-accentCyan font-bold uppercase tracking-wider mb-1 flex justify-between">
+                                        <span class="lang-ar">السكن</span><span class="lang-en">Stay</span>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                                    </p>
+                                    <p class="font-bold text-white text-base">Trabzon White House</p>
+                                    <p class="text-xs text-textMuted mt-1"><span class="lang-ar">شقة غرفتين • ٣ ليالي</span><span class="lang-en">2-Bed Apt • 3 Nights</span></p>
+                                    <p class="text-lg font-bold text-white mt-2">SAR 840 <a href="https://www.booking.com/searchresults.html?ss=Trabzon" target="_blank" class="text-xs text-primaryBlue font-semibold mx-1 cursor-pointer hover:underline"><span class="lang-ar">رابط الحجز</span><span class="lang-en">Book Link</span></a></p>
+                                </div>
+
+                                <!-- Transport Data -->
+                                <div class="bg-darkBg p-4 rounded-xl border border-cardBorder group hover:border-primaryBlue/50 transition-colors">
+                                    <p class="text-xs text-accentCyan font-bold uppercase tracking-wider mb-1 flex justify-between">
+                                        <span class="lang-ar">المواصلات</span><span class="lang-en">Transport</span>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                                    </p>
+                                    <p class="font-bold text-white text-base">SUV Rental</p>
+                                    <p class="text-xs text-textMuted mt-1"><span class="lang-ar">تويوتا راف فور • ٣ أيام</span><span class="lang-en">Toyota RAV4 • 3 Days</span></p>
+                                    <p class="text-lg font-bold text-white mt-2">SAR 450 <a href="https://www.rentalcars.com/search-results?location=Trabzon" target="_blank" class="text-xs text-primaryBlue font-semibold mx-1 cursor-pointer hover:underline"><span class="lang-ar">رابط الحجز</span><span class="lang-en">Book Link</span></a></p>
+                                </div>
+                            </div>
+
+                            <!-- Day-by-Day Timeline -->
+                            <div class="bg-darkBg p-5 rounded-xl border border-cardBorder mb-6">
+                                <h4 class="text-sm font-bold text-white mb-4 border-b border-cardBorder pb-2">
+                                    <span class="lang-ar">الخطة السياحية المخصصة لـ ٣ أيام (عائلة + طبيعة ومطاعم)</span>
+                                    <span class="lang-en">Personalized 3-Day Tourist Plan (Family + Nature & Food)</span>
+                                </h4>
+                                <div class="border-r-2 ltr:border-l-2 ltr:border-r-0 border-cardBorder mr-2 ltr:ml-2 ltr:mr-0 pr-6 ltr:pl-6 ltr:pr-0 space-y-6 relative">
+                                    
+                                    <div class="relative timeline-node">
+                                        <h5 class="text-accentCyan font-bold text-sm">
+                                            <span class="lang-ar">اليوم الأول: الوصول ومعالم المدينة</span>
+                                            <span class="lang-en">Day 1: Arrival & City Highlights</span>
+                                        </h5>
+                                        <ul class="text-xs text-textMuted mt-3 space-y-3">
+                                            <li>
+                                                <strong class="text-white block mb-0.5"><span class="lang-ar">الصباح والفطور:</span><span class="lang-en">Morning & Breakfast:</span></strong>
+                                                <span class="lang-ar">الوصول للمطار واستلام سيارة الـ SUV. التوجه إلى <strong>Seyir Terası</strong> لتناول فطور بانورامي يضم العسل المحلي والقشطة الطازجة (كايماك).</span>
+                                                <span class="lang-en">Arrive at TZX, pick up your SUV. Drive to <strong>Seyir Terası</strong> for a panoramic breakfast featuring local honey and fresh Kaymak.</span>
+                                            </li>
+                                            <li>
+                                                <strong class="text-white block mb-0.5"><span class="lang-ar">الظهيرة والغداء:</span><span class="lang-en">Afternoon & Lunch:</span></strong>
+                                                <span class="lang-ar">استكشاف آيا صوفيا التاريخية في طرابزون. تناول الغداء في مطعم <strong>Cemilusta</strong> الشهير بكرات لحم أكشابات الأصيلة.</span>
+                                                <span class="lang-en">Explore the historic Hagia Sophia of Trabzon. Enjoy lunch at <strong>Cemilusta</strong>, famous for authentic Akçaabat Meatballs.</span>
+                                            </li>
+                                            <li>
+                                                <strong class="text-white block mb-0.5"><span class="lang-ar">المساء والعشاء:</span><span class="lang-en">Evening & Dinner:</span></strong>
+                                                <span class="lang-ar">القيادة صعوداً إلى تلة بوزتيبي. مشاهدة الغروب وتناول العشاء في <strong>Boztepe Tea Garden</strong> (يجب تجربة طبق الكويماك/المهلبية).</span>
+                                                <span class="lang-en">Drive up to Boztepe Hill. Watch the sunset and have dinner at <strong>Boztepe Tea Garden</strong> (Must try: Kuymak cheese fondue).</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="relative timeline-node">
+                                        <h5 class="text-accentCyan font-bold text-sm">
+                                            <span class="lang-ar">اليوم الثاني: الهروب للطبيعة الساحرة (أوزنجول)</span>
+                                            <span class="lang-en">Day 2: The Ultimate Nature Escape (Uzungöl)</span>
+                                        </h5>
+                                        <ul class="text-xs text-textMuted mt-3 space-y-3">
+                                            <li>
+                                                <strong class="text-white block mb-0.5"><span class="lang-ar">الصباح والفطور:</span><span class="lang-en">Morning & Breakfast:</span></strong>
+                                                <span class="lang-ar">إفطار سريع في الشقة. الانطلاق بالسيارة لمدة ساعة ونصف عبر طرق خلابة وصولاً إلى بحيرة أوزنجول.</span>
+                                                <span class="lang-en">Quick breakfast at your apartment. Drive your SUV 1.5 hrs through scenic routes to Uzungöl Lake.</span>
+                                            </li>
+                                            <li>
+                                                <strong class="text-white block mb-0.5"><span class="lang-ar">الظهيرة والغداء:</span><span class="lang-en">Afternoon & Lunch:</span></strong>
+                                                <span class="lang-ar">استئجار دراجات هوائية أو أخذ جولة بالقارب في البحيرة. تناول غداء من سمك السلمون النهري الطازج في مطعم <strong>Inan Kardeşler</strong>.</span>
+                                                <span class="lang-en">Rent bicycles or take a boat ride on the lake. Feast on fresh river trout for lunch at <strong>Inan Kardeşler Restaurant</strong>.</span>
+                                            </li>
+                                            <li>
+                                                <strong class="text-white block mb-0.5"><span class="lang-ar">المساء والعشاء:</span><span class="lang-en">Evening & Dinner:</span></strong>
+                                                <span class="lang-ar">الاسترخاء في مقاهي البحيرة، ثم العودة للمدينة لتناول العشاء في مطعم <strong>Tarihi Kalkanoğlu Pilavı</strong> لأطباق الأرز العثمانية التاريخية.</span>
+                                                <span class="lang-en">Relax at lakeside cafes. Return to Trabzon city and enjoy dinner at <strong>Tarihi Kalkanoğlu Pilavı</strong> for historic Ottoman rice dishes.</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="relative timeline-node">
+                                        <h5 class="text-accentCyan font-bold text-sm">
+                                            <span class="lang-ar">اليوم الثالث: عجائب التاريخ والمغادرة</span>
+                                            <span class="lang-en">Day 3: Ancient Wonders & Departure</span>
+                                        </h5>
+                                        <ul class="text-xs text-textMuted mt-3 space-y-3">
+                                            <li>
+                                                <strong class="text-white block mb-0.5"><span class="lang-ar">الصباح والفطور:</span><span class="lang-en">Morning & Breakfast:</span></strong>
+                                                <span class="lang-ar">إفطار في مطعم <strong>Cephanelik</strong> (مبنى أثري رائع). ثم القيادة نحو دير سوميلا المذهل المنحوت في الجبل.</span>
+                                                <span class="lang-en">Breakfast at <strong>Cephanelik Restaurant</strong> (set in an amazing historic armory). Drive to the spectacular Sumela Monastery.</span>
+                                            </li>
+                                            <li>
+                                                <strong class="text-white block mb-0.5"><span class="lang-ar">الظهيرة والغداء:</span><span class="lang-en">Afternoon & Lunch:</span></strong>
+                                                <span class="lang-ar">تسلق واستكشاف المنحدرات المحيطة بالدير. تناول غداء متأخر في مطعم <strong>Coşandere</strong> المطل مباشرة على النهر المتدفق.</span>
+                                                <span class="lang-en">Hike and explore the monastery cliffs. Have a late lunch at <strong>Coşandere Restaurant</strong> right over the rushing river.</span>
+                                            </li>
+                                            <li>
+                                                <strong class="text-white block mb-0.5"><span class="lang-ar">المساء والعشاء:</span><span class="lang-en">Evening & Dinner:</span></strong>
+                                                <span class="lang-ar">التسوق لشراء الهدايا التذكارية من "فوروم طرابزون". تسليم السيارة في المطار وتسجيل الدخول لرحلة العودة.</span>
+                                                <span class="lang-en">Final souvenir shopping at Forum Trabzon. Drop off your SUV at the airport and check in for your departure flight.</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <!-- Financial Summary -->
+                            <div class="bg-gradient-to-r from-primaryBlue/20 to-accentCyan/10 border border-primaryBlue/30 p-5 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-4">
+                                <div>
+                                    <p class="text-sm font-semibold text-white">
+                                        <span class="lang-ar">التكلفة الإجمالية (طيران + فندق + سيارة)</span>
+                                        <span class="lang-en">Total Raw Cost (Flights + Hotel + Car)</span>
+                                    </p>
+                                    <p class="text-xs text-textMuted mt-1 line-through">
+                                        <span class="lang-ar">سعر الباقة في الوكالات السياحية: ٣,٧٠٠ ريال</span>
+                                        <span class="lang-en">Traditional Agency Package: SAR 3,700</span>
+                                    </p>
+                                </div>
+                                <div class="text-center sm:text-right rtl:sm:text-left">
+                                    <p class="text-3xl font-extrabold text-white">SAR 2,865</p>
+                                    <p class="text-xs font-bold text-accentCyan mt-1 bg-accentCyan/10 px-2 py-1 rounded inline-block">
+                                        <span class="lang-ar">عمولات السماسرة المخفية: ٠ ريال</span>
+                                        <span class="lang-en">Middleman Commission: SAR 0</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                chatContainer.insertAdjacentHTML('beforeend', resultHTML);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                // Reset Button to Success State
+                btnAr.innerHTML = 'تم بناء الخطة بنجاح ✓';
+                btnEn.innerHTML = 'Raw API Itinerary Secured ✓';
+                btn.classList.replace('bg-cardBorder', 'bg-emerald-600');
+                btn.classList.replace('text-textMuted', 'text-white');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
